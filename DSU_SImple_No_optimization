@@ -1,0 +1,67 @@
+class Solution {
+public:
+    int numberOfGoodPaths(vector<int>& vals, vector<vector<int>>& edges) {
+        int n = vals.size();
+        vector<int> adj[n];
+        
+        for (auto& edge : edges) {
+            int nodeA = edge[0];
+            int nodeB = edge[1];
+            if (vals[nodeA] >= vals[nodeB]) {
+                adj[nodeA].push_back(nodeB);
+            }
+            if (vals[nodeA] <= vals[nodeB]) {
+                adj[nodeB].push_back(nodeA);
+            }
+        }
+        
+        int goodPath = 0;
+        
+        //value -> nodes with the same values
+        map<int , vector<int>> myMap;
+        for(int i=0;i<vals.size();i++){
+            myMap[vals[i]].push_back(i);
+        }
+        
+        //connecting nodes with same value and their adjacency nodes in the same
+        //component
+        vector<int> parent(n , -1);
+        for(auto i : myMap){
+            for(auto sameNodes:i.second){
+                for(auto it:adj[sameNodes]){
+                    union_op(parent , sameNodes , it);
+                }
+            }
+            
+            unordered_map<int , int> makeGroups;
+            for(int u:i.second){
+                makeGroups[find(parent , u)]++;
+            }
+            
+            goodPath += i.second.size();
+            
+            for(auto p:makeGroups){
+                goodPath += (p.second * (p.second - 1) / 2);
+            }
+        }
+        
+        return goodPath;
+    }
+    
+    void union_op(vector<int> &parent , int node1 , int node2){
+        int par1 = find(parent , node1);
+        int par2 = find(parent , node2);
+        
+        if(par1 != par2){
+            parent[par1] = par2;
+        }
+    }
+    
+    int find(vector<int> &parent , int node){
+        if(parent[node] == -1){
+            return node;
+        }
+        
+        return find(parent , parent[node]);
+    }
+};
