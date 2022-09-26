@@ -1,0 +1,84 @@
+class DisjointSet {
+private:
+    vector<int> parent;
+    vector<int> rank;
+public:
+    DisjointSet(int size) {
+        parent.resize(size, -1);
+        rank.resize(size, 0); 
+    }
+    int find(int node) {
+        if(parent[node] == -1){
+            return node;
+        }
+        
+        //For the path Compression
+        return parent[node] = find(parent[node]);
+    }
+    
+    //Remember that the rank will only change in case rank of Two Absolute
+    //Parent are equal
+    
+    void union_op(int x, int y) {
+        int parX = find(x);
+        int parY = find(y);
+        
+        if (parX == parY){
+            return;
+        } 
+        
+        if (rank[parX] > rank[parY]) {
+            parent[parY] = parX;
+        }
+        else if (rank[parX] < rank[parY]) {
+            parent[parX] = parY;
+        }
+        else {
+            parent[parY] = parX;
+            rank[parX]++;
+        }
+    }
+    
+};
+
+
+class Solution {
+public:
+    vector<vector<string>> accountsMerge(vector<vector<string>>& accounts) {
+        int n = accounts.size();
+        DisjointSet *dsu = new DisjointSet(n);
+        unordered_map<string , int> emailGroup;
+        for(int i=0;i<accounts.size();i++){
+            string ownerName = accounts[i][0];
+            for(int j=1;j<accounts[i].size();j++){
+                if(emailGroup.find(accounts[i][j]) == emailGroup.end()){
+                    emailGroup[accounts[i][j]] = i;
+                }
+                else{
+                    dsu -> union_op(i , emailGroup[accounts[i][j]]);
+                }
+            }
+        }
+        
+        unordered_map<int , vector<string>> components;
+        for(auto i:emailGroup){
+            string mail = i.first;
+            int group = i.second;
+            
+            components[dsu -> find(group)].push_back(mail);
+        }
+        
+        vector<vector<string>> ans;
+        
+        for(auto i:components){
+            int group = i.first;
+            vector<string> level;
+            level.push_back(accounts[group][0]);
+            level.insert(level.end() , i.second.begin() , i.second.end());
+            sort(level.begin() + 1 , level.end());
+            ans.push_back(level);
+        }
+        
+        return ans;
+    }
+};
